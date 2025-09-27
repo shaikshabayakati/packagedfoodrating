@@ -1,5 +1,5 @@
 """
-Barcode scanning and OpenFoodFacts API integration module
+Barcode scanning and OpenFoodFacts API integration modules
 """
 import requests
 import json
