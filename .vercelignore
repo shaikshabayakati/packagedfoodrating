@@ -1,0 +1,66 @@
+# Python cache files
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+
+# Environment variables
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+
+# IDE files
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS generated files
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# Test files and directories
+test/
+tests/
+*_test.py
+test_*.py
+
+# Local development files
+opencv_auto_stop.py
+camera_test.py
+opencv.py
+sample*.webp
+sample*.png
+sample*.jpg
+sample*.jpeg
+
+# Git files
+.git/
+.gitignore
+
+# README and documentation (optional, comment out if you want to include)
+README.md

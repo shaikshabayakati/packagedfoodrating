@@ -1,0 +1,10 @@
+Flask==2.3.3
+requests==2.31.0
+Pillow==10.0.1
+pyzbar==0.1.9
+opencv-python-headless==4.8.1.78
+numpy==1.24.3
+langchain-google-genai==1.0.8
+langchain-core==0.2.38
+pydantic==2.5.3
+werkzeug==2.3.7

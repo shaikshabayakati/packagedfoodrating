@@ -7,7 +7,7 @@
     <style>
         body {
             font-family: Arial, sans-serif;
-            background: #1a1919;
+            background: #fefdfd;
             margin: 0;
             padding: 0;
         }
@@ -99,14 +99,72 @@
             border-radius: 6px;
             box-shadow: 0 1px 4px rgba(0,0,0,0.08);
         }
+        
+        /* Loading Screen Styles */
+        .loading-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.7);
+            display: none;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+        }
+        .loading-content {
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            text-align: center;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+        }
+        .spinner {
+            width: 50px;
+            height: 50px;
+            border: 5px solid #f3f3f3;
+            border-top: 5px solid #4CAF50;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 20px;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        .loading-text {
+            font-size: 18px;
+            color: #333;
+            margin-bottom: 10px;
+        }
+        .loading-subtext {
+            font-size: 14px;
+            color: #666;
+        }
+        
+        /* Button disabled state */
+        .button:disabled {
+            background: #cccccc;
+            cursor: not-allowed;
+        }
     </style>
 </head>
 <body>
+    <!-- Loading Overlay -->
+    <div id="loadingOverlay" class="loading-overlay">
+        <div class="loading-content">
+            <div class="spinner"></div>
+            <div id="loadingText" class="loading-text">Processing...</div>
+            <div id="loadingSubtext" class="loading-subtext">Please wait while we analyze your request</div>
+        </div>
+    </div>
+
     <div class="container">
         <h2>Nutrition Score Scanner</h2>
         <form id="uploadForm" class="file-input">
             <input type="file" id="imageInput" accept="image/*" required />
-            <button type="submit">Upload & Analyze</button>
+            <button type="submit" id="uploadBtn">Upload & Analyze</button>
         </form>
         <div class="file-input">
             <button id="liveScanBtn" class="button" style="background: #FF6B35; margin-top: 10px;">📷 Live Camera Scan</button>
@@ -130,6 +188,32 @@
         const barcodeInput = document.getElementById('barcodeInput');
         const analyzeBarcodeBtn = document.getElementById('analyzeBarcode');
         const liveScanBtn = document.getElementById('liveScanBtn');
+        const uploadBtn = document.getElementById('uploadBtn');
+        
+        // Loading elements
+        const loadingOverlay = document.getElementById('loadingOverlay');
+        const loadingText = document.getElementById('loadingText');
+        const loadingSubtext = document.getElementById('loadingSubtext');
+
+        function showLoading(text = 'Processing...', subtext = 'Please wait while we analyze your request') {
+            loadingText.textContent = text;
+            loadingSubtext.textContent = subtext;
+            loadingOverlay.style.display = 'flex';
+            
+            // Disable all buttons
+            uploadBtn.disabled = true;
+            liveScanBtn.disabled = true;
+            analyzeBarcodeBtn.disabled = true;
+        }
+
+        function hideLoading() {
+            loadingOverlay.style.display = 'none';
+            
+            // Re-enable all buttons
+            uploadBtn.disabled = false;
+            liveScanBtn.disabled = false;
+            analyzeBarcodeBtn.disabled = false;
+        }
 
         function hideAllMessages() {
             output.style.display = 'none';
@@ -169,6 +253,7 @@
             }
             
             hideAllMessages();
+            showLoading('Analyzing Barcode...', 'Fetching nutrition data from database');
             
             fetch('/analyze_barcode', {
                 method: 'POST',
@@ -189,27 +274,15 @@
             .catch(err => {
                 error.textContent = 'An error occurred while analyzing the barcode.';
                 error.style.display = 'block';
+            })
+            .finally(() => {
+                hideLoading();
             });
         });
 
         liveScanBtn.addEventListener('click', function() {
             hideAllMessages();
-            
-            // Show loading state
-            liveScanBtn.textContent = '📷 Opening Camera...';
-            liveScanBtn.disabled = true;
-            
-            // Show instructions
-            const instructions = document.createElement('div');
-            instructions.id = 'cameraInstructions';
-            instructions.className = 'manual-input';
-            instructions.innerHTML = `
-                <p><strong>📷 Camera Scanner Starting...</strong></p>
-                <p>A camera window should open shortly. Point your camera at a product barcode.</p>
-                <p>The scanner will automatically detect, analyze, and return results here.</p>
-                <p>Press Q in the camera window to cancel scanning.</p>
-            `;
-            document.querySelector('.container').appendChild(instructions);
+            showLoading('Starting Camera...', 'Opening camera for live barcode scanning');
             
             fetch('/start_live_scan', {
                 method: 'POST',
@@ -219,10 +292,6 @@
             })
             .then(res => res.json())
             .then(data => {
-                // Remove instructions
-                const inst = document.getElementById('cameraInstructions');
-                if (inst) inst.remove();
-                
                 if (data.error) {
                     error.textContent = data.error;
                     error.style.display = 'block';
@@ -232,16 +301,11 @@
                 }
             })
             .catch(err => {
-                // Remove instructions
-                const inst = document.getElementById('cameraInstructions');
-                if (inst) inst.remove();
-                
                 error.textContent = 'Failed to connect to camera scanner. Please ensure your camera is available.';
                 error.style.display = 'block';
             })
             .finally(() => {
-                liveScanBtn.textContent = '📷 Live Camera Scan';
-                liveScanBtn.disabled = false;
+                hideLoading();
             });
         });
 
@@ -255,6 +319,8 @@
                 error.style.display = 'block';
                 return;
             }
+            
+            showLoading('Analyzing Image...', 'Scanning barcode and fetching nutrition data');
             
             const formData = new FormData();
             formData.append('image', file);
@@ -279,6 +345,9 @@
                 error.textContent = 'An error occurred while processing the image.';
                 error.style.display = 'block';
                 manualInput.style.display = 'block';
+            })
+            .finally(() => {
+                hideLoading();
             });
         });
     </script>

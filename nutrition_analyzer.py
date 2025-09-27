@@ -21,63 +21,139 @@ def calculate_nutrition_score(nutrition_data):
         ("system", "You are a nutrition scoring assistant. Score products based on their nutritional value using the provided guidelines."),
         ("user", """Given this nutrition data, return a numeric score between 0 and 100 AND a detailed comment based on the following scoring guidelines:
 
-NUTRITION SCORING GUIDELINES:
-1. CALORIES (per serving):
-   - Low (0-150): +20 points
-   - Moderate (151-300): +10 points
-   - High (301-500): +5 points
-   - Very High (500+): 0 points
+Your Role: You are an AI Nutrition Analyst. Your task is to evaluate the nutritional information of a food product based on a single serving. You will use the scoring system below, which integrates US FDA labeling guidelines and Indian ICMR/FSSAI nutritional recommendations.
 
-2. PROTEIN (per serving):
-   - High (15g+): +15 points
-   - Good (8-14g): +10 points
-   - Moderate (3-7g): +5 points
-   - Low (0-2g): 0 points
+Instructions:
 
-3. SUGAR (per serving):
-   - Low (0-5g): +15 points
-   - Moderate (6-15g): +10 points
-   - High (16-25g): +5 points
-   - Very High (25g+): -10 points
+Start with a base score of 50 points.
 
-4. FIBER (per serving):
-   - High (8g+): +15 points
-   - Good (4-7g): +10 points
-   - Moderate (2-3g): +5 points
-   - Low (0-1g): 0 points
+Analyze the user-provided nutrition data and apply the rules below to adjust the score.
 
-5. FAT (per serving):
-   - Low (0-5g): +10 points
-   - Moderate (6-15g): +5 points
-   - High (16-25g): 0 points
-   - Very High (25g+): -10 points
+The final score must be between 0 and 100.
 
-6. SODIUM (per serving):
-   - Low (0-200mg): +10 points
-   - Moderate (201-600mg): +5 points
-   - High (601-1200mg): 0 points
-   - Very High (1200mg+): -10 points
+After the final score, provide a Detailed Analysis section. In this section, explain the score by referencing the specific rules triggered. Highlight the product's nutritional benefits and concerns, citing the principles from the provided documents.
 
-7. VITAMINS & MINERALS:
-   - Rich in vitamins/minerals: +10 points
-   - Some vitamins/minerals: +5 points
-   - None listed: 0 points
+NUTRITION SCORING GUIDELINES
+The scoring framework uses the FDA's general guide where 5% Daily Value (DV) or less of a nutrient per serving is considered low, and 20% DV or more is high.
 
-8. ADDITIVES & PRESERVATIVES:
-   - No artificial additives: +5 points
-   - Few additives: +2 points
-   - Many additives: -5 points
+SECTION 1: NUTRIENTS TO LIMIT
 
-BONUS POINTS:
-- Organic: +5 points
-- Non-GMO: +3 points
-- Whole grains: +5 points
-- Natural ingredients: +3 points
 
-PENALTY POINTS:
-- Trans fats: -15 points
-- High fructose corn syrup: -10 points
-- Artificial colors/flavors: -5 points
+(As recommended by the FDA, choose foods lower in saturated fat, sodium, and added sugars.)
+
+A. Added Sugars
+
+ (Based on 50g DV )
+
+Low (≤ 2.5g, which is ≤ 5% DV): +15 points
+
+Moderate (2.6g - 9.9g): +5 points
+
+High (≥ 10g, which is ≥ 20% DV): -10 points
+
+Very High (≥ 25g, which is ≥ 50% DV): -20 points
+
+B. Saturated Fat
+
+ (Based on 20g DV )
+
+Low (≤ 1g, which is ≤ 5% DV): +15 points
+
+Moderate (1.1g - 3.9g): +5 points
+
+High (≥ 4g, which is ≥ 20% DV): -15 points
+
+C. Sodium
+
+ (Based on 2300mg DV; Indian RDA is 2000mg )
+
+
+Low (≤ 115mg, which is ≤ 5% DV): +10 points
+
+Moderate (116mg - 460mg): +5 points
+
+High (461mg - 690mg): -5 points
+
+Very High (> 690mg, which is > 30% DV): -10 points
+
+D. Trans Fat
+
+ (Listed on Nutrition Facts labels )
+
+Contains any amount > 0g: -20 points
+
+E. Total Fat
+
+ (Based on 78g DV ; note that Indian recommendations for visible fat intake are lower at 20-50g per day )
+
+
+Low (0-5g): +5 points
+
+Moderate (5.1g - 15.6g): 0 points
+
+High (15.7g - 25g): -5 points
+
+Very High (> 25g): -10 points
+
+SECTION 2: NUTRIENTS TO ENCOURAGE
+
+
+(As recommended by the FDA, more often choose foods that are higher in dietary fiber, vitamin D, calcium, iron, and potassium.)
+
+
+A. Dietary Fiber
+
+ (Based on 28g DV; Indian RDA for a sedentary man is 30g )
+
+
+High (≥ 5.6g, which is ≥ 20% DV): +15 points
+
+Good Source (2.8g - 5.5g, which is 10-19% DV): +10 points
+
+Contains Fiber (1g - 2.7g): +5 points
+
+Low (< 1g): 0 points
+
+B. Protein
+
+ (Based on 50g DV; Indian RDA is ~0.83 g/kg/day , or 46-54g for most adults )
+
+
+
+High (≥ 10g, which is ≥ 20% DV): +10 points
+
+Good Source (5g - 9.9g, which is 10-19% DV): +5 points
+
+Low (< 5g): 0 points
+
+C. Key Vitamins & Minerals
+
+ (Vitamin D, Calcium, Iron, Potassium )
+
+
+Award points for the single highest %DV among these four nutrients. Do not add points together.
+
+High Source (≥ 20% DV for any one): +10 points
+
+Good Source (10-19% DV for any one): +5 points
+
+Low Source (≤ 9% DV for all four): 0 points
+
+SECTION 3: BONUS & PENALTY MODIFIERS
+
+A. "High In" Penalty
+
+If the product is "High" (≥ 20% DV) in two or more categories from Section 1 (Added Sugars, Saturated Fat, Sodium): -10 additional points.
+
+B. "High In" Bonus
+
+If the product is "High" (≥ 20% DV) in two or more categories from Section 2 (Dietary Fiber, Protein, Key Vitamins & Minerals): +10 additional points.
+
+C. Protein Quality Bonus
+
+If the product is a composite food (e.g., meal replacement, health mix) and explicitly states a balanced protein composition of cereals, legumes, and milk/dairy: +5 additional points. 
+
+(This reflects the ICMR-NIN recommendation for a cereal-legume-milk ratio of 3:1:2.5 for good protein quality.
 
 Base score starts at 50. Apply the rules above and ensure final score is between 0-100.
 Provide a detailed comment explaining the score, highlighting health benefits/concerns, and giving recommendations.
