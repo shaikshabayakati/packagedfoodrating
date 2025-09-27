@@ -108,6 +108,9 @@
             <input type="file" id="imageInput" accept="image/*" required />
             <button type="submit">Upload & Analyze</button>
         </form>
+        <div class="file-input">
+            <button id="liveScanBtn" class="button" style="background: #FF6B35; margin-top: 10px;">📷 Live Camera Scan</button>
+        </div>
         <img id="preview" class="preview" style="display:none;" />
         <div id="manualInput" class="manual-input" style="display:none;">
             <p><strong>No barcode detected.</strong> Please enter the barcode manually:</p>
@@ -126,6 +129,7 @@
         const manualInput = document.getElementById('manualInput');
         const barcodeInput = document.getElementById('barcodeInput');
         const analyzeBarcodeBtn = document.getElementById('analyzeBarcode');
+        const liveScanBtn = document.getElementById('liveScanBtn');
 
         function hideAllMessages() {
             output.style.display = 'none';
@@ -185,6 +189,59 @@
             .catch(err => {
                 error.textContent = 'An error occurred while analyzing the barcode.';
                 error.style.display = 'block';
+            });
+        });
+
+        liveScanBtn.addEventListener('click', function() {
+            hideAllMessages();
+            
+            // Show loading state
+            liveScanBtn.textContent = '📷 Opening Camera...';
+            liveScanBtn.disabled = true;
+            
+            // Show instructions
+            const instructions = document.createElement('div');
+            instructions.id = 'cameraInstructions';
+            instructions.className = 'manual-input';
+            instructions.innerHTML = `
+                <p><strong>📷 Camera Scanner Starting...</strong></p>
+                <p>A camera window should open shortly. Point your camera at a product barcode.</p>
+                <p>The scanner will automatically detect, analyze, and return results here.</p>
+                <p>Press Q in the camera window to cancel scanning.</p>
+            `;
+            document.querySelector('.container').appendChild(instructions);
+            
+            fetch('/start_live_scan', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                }
+            })
+            .then(res => res.json())
+            .then(data => {
+                // Remove instructions
+                const inst = document.getElementById('cameraInstructions');
+                if (inst) inst.remove();
+                
+                if (data.error) {
+                    error.textContent = data.error;
+                    error.style.display = 'block';
+                } else {
+                    // Display results same as upload scan
+                    displayResult(data);
+                }
+            })
+            .catch(err => {
+                // Remove instructions
+                const inst = document.getElementById('cameraInstructions');
+                if (inst) inst.remove();
+                
+                error.textContent = 'Failed to connect to camera scanner. Please ensure your camera is available.';
+                error.style.display = 'block';
+            })
+            .finally(() => {
+                liveScanBtn.textContent = '📷 Live Camera Scan';
+                liveScanBtn.disabled = false;
             });
         });
 

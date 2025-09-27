@@ -4,6 +4,8 @@ Flask web application for nutrition score analysis
 import os
 import tempfile
 import json
+import subprocess
+import sys
 from flask import Flask, request, jsonify, render_template
 from werkzeug.utils import secure_filename
 
@@ -109,6 +111,57 @@ def analyze_image():
 
     except Exception as e:
         return jsonify({'error': str(e), 'show_manual': True}), 500
+
+@app.route('/start_live_scan', methods=['POST'])
+def start_live_scan():
+    """Start the live camera barcode scanner and return results"""
+    try:
+        # Check if opencv_auto_stop.py exists
+        opencv_path = os.path.join(os.path.dirname(__file__), 'opencv_auto_stop.py')
+        if not os.path.exists(opencv_path):
+            return jsonify({'error': 'Camera scanner not found. Please ensure opencv_auto_stop.py exists.'}), 500
+        
+        # Run the opencv scanner and wait for results
+        try:
+            # Run the scanner script and capture output
+            result = subprocess.run([
+                sys.executable, opencv_path
+            ], capture_output=True, text=True, timeout=120, cwd=os.path.dirname(__file__))  # 2 minute timeout
+            
+            # Check if results file was created
+            results_file = os.path.join(os.path.dirname(__file__), 'live_scan_results.json')
+            if os.path.exists(results_file):
+                try:
+                    with open(results_file, 'r') as f:
+                        results = json.load(f)
+                    
+                    # Clean up the temp file
+                    os.remove(results_file)
+                    
+                    # Return the same format as other scan endpoints
+                    return jsonify({
+                        'score': results['score'],
+                        'comment': results['comment'],
+                        'details': results['details']
+                    })
+                    
+                except Exception as e:
+                    return jsonify({'error': f'Error reading scan results: {str(e)}'}), 500
+            else:
+                # No results file means scanning was cancelled or failed
+                if result.returncode != 0:
+                    error_msg = result.stderr.strip() if result.stderr else "Camera scanning failed"
+                    return jsonify({'error': error_msg}), 500
+                else:
+                    return jsonify({'error': 'Scanning was cancelled by user'}), 400
+            
+        except subprocess.TimeoutExpired:
+            return jsonify({'error': 'Camera scanning timed out after 2 minutes'}), 408
+        except Exception as e:
+            return jsonify({'error': f'Failed to start camera scanner: {str(e)}'}), 500
+            
+    except Exception as e:
+        return jsonify({'error': f'Unexpected error: {str(e)}'}), 500
 
 if __name__ == '__main__':
     app.run(debug=True, host='0.0.0.0', port=5000)
