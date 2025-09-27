@@ -1,0 +1,229 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Nutrition Score Scanner</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background: #1a1919;
+            margin: 0;
+            padding: 0;
+        }
+        .container {
+            max-width: 500px;
+            margin: 40px auto;
+            background: #fff;
+            border-radius: 10px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            padding: 30px 20px 20px 20px;
+        }
+        h2 {
+            text-align: center;
+            color: #2d7a2d;
+        }
+        .file-input {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+        input[type="file"] {
+            margin-bottom: 10px;
+        }
+        .output, .error {
+            margin-top: 20px;
+            padding: 15px;
+            border-radius: 6px;
+        }
+        .output {
+            background: #e6f9e6;
+            color: #1a4d1a;
+        }
+        .error {
+            background: #ffe6e6;
+            color: #a94442;
+        }
+        .manual-input {
+            background: #f0f8ff;
+            border: 1px solid #b0c4de;
+            color: #2f4f4f;
+            margin-top: 10px;
+            padding: 15px;
+            border-radius: 6px;
+        }
+        .button {
+            padding: 10px 20px;
+            background: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+        .manual-input input {
+            width: 70%;
+            padding: 8px;
+            margin-right: 10px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+        }
+        .manual-input button {
+            padding: 8px 16px;
+            background: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+        .manual-input button:hover {
+            background: #45a049;
+        }
+        .score-display {
+            font-size: 24px;
+            font-weight: bold;
+            color: #2d7a2d;
+            margin-bottom: 10px;
+        }
+        .comment-display {
+            background: #f9f9f9;
+            border-left: 4px solid #2d7a2d;
+            padding: 10px;
+            margin: 10px 0;
+            font-style: italic;
+        }
+        .preview {
+            display: block;
+            margin: 0 auto 15px auto;
+            max-width: 100%;
+            border-radius: 6px;
+            box-shadow: 0 1px 4px rgba(0,0,0,0.08);
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h2>Nutrition Score Scanner</h2>
+        <form id="uploadForm" class="file-input">
+            <input type="file" id="imageInput" accept="image/*" required />
+            <button type="submit">Upload & Analyze</button>
+        </form>
+        <img id="preview" class="preview" style="display:none;" />
+        <div id="manualInput" class="manual-input" style="display:none;">
+            <p><strong>No barcode detected.</strong> Please enter the barcode manually:</p>
+            <input type="text" id="barcodeInput" placeholder="Enter barcode number" />
+            <button id="analyzeBarcode">Analyze Barcode</button>
+        </div>
+        <div id="output" class="output" style="display:none;"></div>
+        <div id="error" class="error" style="display:none;"></div>
+    </div>
+    <script>
+        const form = document.getElementById('uploadForm');
+        const imageInput = document.getElementById('imageInput');
+        const preview = document.getElementById('preview');
+        const output = document.getElementById('output');
+        const error = document.getElementById('error');
+        const manualInput = document.getElementById('manualInput');
+        const barcodeInput = document.getElementById('barcodeInput');
+        const analyzeBarcodeBtn = document.getElementById('analyzeBarcode');
+
+        function hideAllMessages() {
+            output.style.display = 'none';
+            error.style.display = 'none';
+            manualInput.style.display = 'none';
+        }
+
+        function displayResult(data) {
+            const scoreHtml = `<div class="score-display">Nutrition Score: ${data.score}/100</div>`;
+            const commentHtml = `<div class="comment-display">${data.comment}</div>`;
+        
+            output.innerHTML = scoreHtml + commentHtml ;
+            output.style.display = 'block';
+        }
+
+        imageInput.addEventListener('change', function() {
+            const file = this.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    preview.src = e.target.result;
+                    preview.style.display = 'block';
+                };
+                reader.readAsDataURL(file);
+            } else {
+                preview.style.display = 'none';
+            }
+            hideAllMessages();
+        });
+
+        analyzeBarcodeBtn.addEventListener('click', function() {
+            const barcode = barcodeInput.value.trim();
+            if (!barcode) {
+                error.textContent = 'Please enter a barcode.';
+                error.style.display = 'block';
+                return;
+            }
+            
+            hideAllMessages();
+            
+            fetch('/analyze_barcode', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ barcode: barcode })
+            })
+            .then(res => res.json())
+            .then(data => {
+                if (data.error) {
+                    error.textContent = data.error;
+                    error.style.display = 'block';
+                } else {
+                    displayResult(data);
+                }
+            })
+            .catch(err => {
+                error.textContent = 'An error occurred while analyzing the barcode.';
+                error.style.display = 'block';
+            });
+        });
+
+        form.addEventListener('submit', function(e) {
+            e.preventDefault();
+            hideAllMessages();
+            
+            const file = imageInput.files[0];
+            if (!file) {
+                error.textContent = 'Please select an image.';
+                error.style.display = 'block';
+                return;
+            }
+            
+            const formData = new FormData();
+            formData.append('image', file);
+            
+            fetch('/analyze', {
+                method: 'POST',
+                body: formData
+            })
+            .then(res => res.json())
+            .then(data => {
+                if (data.error) {
+                    error.textContent = data.error;
+                    error.style.display = 'block';
+                    if (data.show_manual) {
+                        manualInput.style.display = 'block';
+                    }
+                } else {
+                    displayResult(data);
+                }
+            })
+            .catch(err => {
+                error.textContent = 'An error occurred while processing the image.';
+                error.style.display = 'block';
+                manualInput.style.display = 'block';
+            });
+        });
+    </script>
+</body>
+</html>
