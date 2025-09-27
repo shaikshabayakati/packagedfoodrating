@@ -21,11 +21,9 @@ def calculate_nutrition_score(nutrition_data):
         ("system", "You are a nutrition scoring assistant. Score products based on their nutritional value using the provided guidelines."),
         ("user", """Given this nutrition data, return a numeric score between 0 and 100 AND a detailed comment based on the following scoring guidelines:
 
-Your Role: You are an AI Nutrition Analyst. Your task is to evaluate the nutritional information of a food product based on a single serving. You will use the scoring system below, which integrates US FDA labeling guidelines and Indian ICMR/FSSAI nutritional recommendations.
 
-Instructions:
 
-Start with a base score of 50 points.
+Start with a base score of 0 points.
 
 Analyze the user-provided nutrition data and apply the rules below to adjust the score.
 
@@ -155,7 +153,7 @@ If the product is a composite food (e.g., meal replacement, health mix) and expl
 
 (This reflects the ICMR-NIN recommendation for a cereal-legume-milk ratio of 3:1:2.5 for good protein quality.
 
-Base score starts at 50. Apply the rules above and ensure final score is between 0-100.
+Base score starts at 0. Apply the rules above and ensure final score is between 0-100.
 Provide a detailed comment explaining the score, highlighting health benefits/concerns, and giving recommendations.
 
 Nutrition data:
