@@ -23,9 +23,6 @@ def index():
     return render_template('nutrition_score.html')
 
 
-@app.route('/favicon.ico')
-def favicon():
-    return '', 204  # No content response for favicon
 
 @app.route('/analyze_barcode', methods=['POST'])
 def analyze_barcode():

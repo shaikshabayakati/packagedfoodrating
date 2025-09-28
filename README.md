@@ -208,33 +208,74 @@ packagedfoodrating/
 
 ## 🏃‍♂️ Nutrition Scoring Algorithm  
 
-The AI uses a comprehensive 100-point scoring system based on established nutritional guidelines:
+The AI uses a comprehensive FDA-based scoring system with Indian nutritional guidelines, starting from **0 points** and building up to 100 based on nutritional quality:
 
-### 📊 Scoring Breakdown
+### 📊 SECTION 1: NUTRIENTS TO LIMIT ⚠️
+*Following FDA recommendations to choose foods lower in these nutrients*
 
-| **Category** | **Weight** | **Criteria** |
-|--------------|------------|--------------|
-| **Calories** | 20 points | Low (0-150): +20 → High (500+): 0 |
-| **Protein** | 15 points | High (15g+): +15 → Low (0-2g): 0 |
-| **Sugar** | 15 points | Low (0-5g): +15 → Very High (25g+): -10 |
-| **Fiber** | 15 points | High (8g+): +15 → Low (0-1g): 0 |
-| **Fat** | 10 points | Low (0-5g): +10 → Very High (25g+): -10 |
-| **Sodium** | 10 points | Low (0-200mg): +10 → Very High (1200mg+): -10 |
-| **Vitamins/Minerals** | 10 points | Rich: +10 → None listed: 0 |
-| **Additives** | 5 points | Natural: +5 → Many artificial: -5 |
+#### 🍬 Added Sugars (Based on 50g Daily Value)
+- **Low (≤ 2.5g, ≤ 5% DV)**: +15 points ✅
+- **Moderate (2.6g - 9.9g)**: +5 points
+- **High (≥ 10g, ≥ 20% DV)**: -10 points ❌
+- **Very High (≥ 25g, ≥ 50% DV)**: -20 points ❌❌
 
-### 🎯 Bonus Points
-- **Organic**: +5 points
-- **Non-GMO**: +3 points  
-- **Whole grains**: +5 points
-- **Natural ingredients**: +3 points
+#### 🧈 Saturated Fat (Based on 20g Daily Value)
+- **Low (≤ 1g, ≤ 5% DV)**: +15 points ✅
+- **Moderate (1.1g - 3.9g)**: +5 points
+- **High (≥ 4g, ≥ 20% DV)**: -15 points ❌
 
-### ⚠️ Penalty Points
-- **Trans fats**: -15 points
-- **High fructose corn syrup**: -10 points
-- **Artificial colors/flavors**: -5 points
+#### 🧂 Sodium (Based on 2300mg DV / 2000mg Indian RDA)
+- **Low (≤ 115mg, ≤ 5% DV)**: +10 points ✅
+- **Moderate (116mg - 460mg)**: +5 points
+- **High (461mg - 690mg)**: -5 points ⚠️
+- **Very High (> 690mg, > 30% DV)**: -10 points ❌
 
-**Base Score**: 50 points | **Final Range**: 0-100 points
+#### ⛔ Trans Fat & Total Fat
+- **Trans Fat (any amount > 0g)**: -20 points ❌❌
+- **Total Fat**: Low (0-5g): +5 → Very High (>25g): -10 points
+
+### 📊 SECTION 2: NUTRIENTS TO ENCOURAGE ✅
+*FDA-recommended nutrients: fiber, vitamin D, calcium, iron, potassium*
+
+#### 🌾 Dietary Fiber (Based on 28g DV / 30g Indian RDA)
+- **High (≥ 5.6g, ≥ 20% DV)**: +15 points ✅✅
+- **Good Source (2.8g - 5.5g, 10-19% DV)**: +10 points ✅
+- **Contains Fiber (1g - 2.7g)**: +5 points
+- **Low (< 1g)**: 0 points
+
+#### 💪 Protein (Based on 50g DV / Indian RDA 0.83g/kg/day)
+- **High (≥ 10g, ≥ 20% DV)**: +10 points ✅✅
+- **Good Source (5g - 9.9g, 10-19% DV)**: +5 points ✅
+- **Low (< 5g)**: 0 points
+
+#### 🧪 Key Vitamins & Minerals (Vitamin D, Calcium, Iron, Potassium)
+*Points awarded for highest %DV among these nutrients*
+- **High Source (≥ 20% DV)**: +10 points ✅✅
+- **Good Source (10-19% DV)**: +5 points ✅
+- **Low Source (≤ 9% DV)**: 0 points
+
+### 📊 SECTION 3: BONUS & PENALTY MODIFIERS 🎯
+
+#### 🏆 Special Bonuses
+- **"High In" Bonus**: +10 points if high (≥20% DV) in 2+ beneficial nutrients
+- **Protein Quality Bonus**: +5 points for balanced cereal-legume-milk protein (3:1:2.5 ratio per ICMR-NIN)
+
+#### ⚠️ Special Penalties  
+- **"High In" Penalty**: -10 points if high (≥20% DV) in 2+ harmful nutrients
+
+### 🎯 Final Scoring Summary
+
+| **Scoring Range** | **Interpretation** |
+|-------------------|-------------------|
+| **90-100 points** | Excellent nutritional profile ⭐⭐⭐⭐⭐ |
+| **70-89 points** | Good nutritional choice ⭐⭐⭐⭐ |
+| **50-69 points** | Moderate nutrition quality ⭐⭐⭐ |
+| **30-49 points** | Poor nutritional profile ⭐⭐ |
+| **0-29 points** | Very poor nutrition quality ⭐ |
+
+**Base Score**: 0 points | **Final Range**: 0-100 points
+
+> **Note**: This scoring system combines FDA Daily Value guidelines with Indian Council of Medical Research (ICMR) recommendations for comprehensive nutrition assessment.
 
 ## ⚙️ Configuration
 

@@ -84,6 +84,9 @@ def main():
     print("Press Q to quit without scanning")
 
     detected_results = None
+    last_detected_barcode = None
+    detection_time = None
+    processing = False
     
     try:
         while True:
@@ -95,6 +98,14 @@ def main():
                     break
                 continue
 
+            # Skip processing if already processing a barcode
+            if processing:
+                cv2.putText(frame, "PROCESSING... Please wait", (10, 30), 
+                           cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 255, 255), 2)
+                cv2.imshow(window, frame)
+                cv2.waitKey(100)
+                continue
+
             # Add instruction text to frame
             cv2.putText(frame, "Point camera at product barcode", (10, 30), 
                        cv2.FONT_HERSHEY_SIMPLEX, 0.7, (255, 255, 255), 2)
@@ -104,8 +115,21 @@ def main():
             # Decode barcodes from the live frame
             barcodes = zbar_decode(frame)
             
+            current_time = time.time()
+            
             for barcode in barcodes:
                 barcode_data = barcode.data.decode('utf-8', errors='ignore')
+                
+                # Check if this is the same barcode detected recently (within 3 seconds)
+                if (last_detected_barcode == barcode_data and 
+                    detection_time and 
+                    current_time - detection_time < 3.0):
+                    continue  # Skip duplicate detection
+                
+                # Mark as processing to prevent multiple detections
+                processing = True
+                last_detected_barcode = barcode_data
+                detection_time = current_time
                 
                 # Draw detection indicator
                 pts = np.array([barcode.polygon], dtype=np.int32).reshape((-1, 1, 2))
@@ -119,7 +143,7 @@ def main():
                 
                 # Show detection frame briefly
                 cv2.imshow(window, frame)
-                cv2.waitKey(1000)  # Show for 1 second
+                cv2.waitKey(500)  # Show for 0.5 seconds
                 
                 print(f"Barcode detected: {barcode_data}")
                 print("Processing nutrition data...")
@@ -134,12 +158,13 @@ def main():
                     with open('live_scan_results.json', 'w') as f:
                         json.dump(results, f, indent=2)
                     
-                    # Close camera and return results
+                    # Close camera and return results immediately
                     cap.release()
                     cv2.destroyAllWindows()
                     return results
                 else:
                     print(f"Analysis failed: {error}")
+                    processing = False  # Allow next detection
                     # Continue scanning for another barcode
                     break
             

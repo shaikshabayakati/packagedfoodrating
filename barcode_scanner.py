@@ -87,23 +87,37 @@ def scan_barcode_from_image(image_path):
 
         results = decode(im, symbols=symbols)
         if results:
-            nums = []
             for r in results:
                 s = "".join(ch for ch in r.data.decode("utf-8", "ignore") if ch.isdigit())
+                
+                # Handle different barcode types
                 if r.type == "EAN13" and len(s) == 13:
                     data, error = fetch_openfood(s)
-                    if error:
-                        raise Exception(error)
-                    return data
-                if r.type == "UPCA" and len(s) == 12:
-                    nums.append("0" + s)
+                    if not error:
+                        return data
+                elif r.type == "UPCA" and len(s) == 12:
+                    # Try UPC-A as is, then with leading zero
+                    data, error = fetch_openfood(s)
+                    if not error:
+                        return data
+                    # Try with leading zero to make it EAN-13
+                    data, error = fetch_openfood("0" + s)
+                    if not error:
+                        return data
                 elif r.type == "EAN8" and len(s) == 8:
-                    nums.append(s)
-
-            if nums:
-                data, error = fetch_openfood(nums[0])
-                if error:
-                    raise Exception(error)
-                return data
+                    data, error = fetch_openfood(s)
+                    if not error:
+                        return data
+                elif r.type == "UPCE" and len(s) >= 6:
+                    # UPC-E needs to be converted to UPC-A format
+                    data, error = fetch_openfood(s)
+                    if not error:
+                        return data
+                
+                # If we have any valid barcode digits, try as generic barcode
+                if len(s) >= 8:
+                    data, error = fetch_openfood(s)
+                    if not error:
+                        return data
 
     raise Exception("No barcode found in image")
